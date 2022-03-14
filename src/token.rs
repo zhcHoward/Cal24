@@ -29,7 +29,7 @@ impl Token {
                 .iter()
                 .enumerate()
                 .map(|(i, token)| match token.kind {
-                    Op(Sub) if i != 0 => format!("({})", token.to_string()),
+                    Op(Sub) | Op(Add) if i != 0 => format!("({})", token.to_string()),
                     _ => token.to_string(),
                 })
                 .collect::<Vec<_>>()
