@@ -2,6 +2,7 @@ use std::collections::HashSet;
 use std::fmt::Display;
 use std::hash::Hash;
 
+mod lazycal;
 mod token;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -163,7 +164,7 @@ fn main() {
             ];
 
             for cal in &calculation {
-                if calculate(cal) == 24. {
+                if calculate(cal) == 24 {
                     rpns.push(*cal);
                     break;
                 }
@@ -187,27 +188,26 @@ fn main() {
     }
 }
 
-fn calculate(rpn: &[Arithmetic; 7]) -> f32 {
+fn calculate(rpn: &[Arithmetic; 7]) -> i32 {
     let mut stack = Vec::with_capacity(3);
     for c in rpn.iter() {
         match c {
             Num(val) => {
-                stack.push(*val as f32);
+                stack.push(lazycal::Int(*val));
             }
             Op(op) => {
                 let val2 = stack.pop().unwrap();
-                let mut val1 = stack.pop().unwrap();
-                match op {
-                    Add => val1 += val2,
-                    Sub => val1 -= val2,
-                    Mul => val1 *= val2,
-                    Div => val1 /= val2,
-                }
-                stack.push(val1);
+                let val1 = stack.pop().unwrap();
+                stack.push(match op {
+                    Add => val1 + val2,
+                    Sub => val1 - val2,
+                    Mul => val1 * val2,
+                    Div => val1 / val2,
+                });
             }
         }
     }
-    stack.pop().unwrap()
+    stack.pop().unwrap().calculate()
 }
 
 #[cfg(test)]
@@ -225,7 +225,7 @@ mod test {
             Op(Operation::Add),
             Op(Operation::Mul),
         ];
-        assert_eq!(calculate(&calculation), 24.)
+        assert_eq!(calculate(&calculation), 24)
     }
 
     #[test]
@@ -239,6 +239,20 @@ mod test {
             Num(2),
             Op(Operation::Mul),
         ];
-        assert_eq!(calculate(&calculation), 24.);
+        assert_eq!(calculate(&calculation), 24);
+    }
+
+    #[test]
+    fn test_calculate3() {
+        let calculation = [
+            Num(8),
+            Num(3),
+            Num(8),
+            Num(3),
+            Op(Operation::Div),
+            Op(Operation::Sub),
+            Op(Operation::Div),
+        ];
+        assert_eq!(calculate(&calculation), 24);
     }
 }
